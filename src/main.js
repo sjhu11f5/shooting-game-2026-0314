@@ -80,11 +80,11 @@ class PreloadScene extends Phaser.Scene {
     this.load.image('star_effect', A + 'star_effect.png');
     // 背景
     for (let i = 1; i <= 5; i++) this.load.image('bg_stage' + i, A + 'bg_stage' + i + '.png');
-    // 効果音
-    this.load.audio('sfx_shoot', A + 'sfx_shoot.ogg');
-    this.load.audio('sfx_powerup', A + 'sfx_powerup.ogg');
-    this.load.audio('sfx_explosion', A + 'sfx_explosion.ogg');
-    this.load.audio('sfx_hit', A + 'sfx_hit.ogg');
+    // 効果音（ogg + mp3 フォールバックでiOS対応）
+    this.load.audio('sfx_shoot', [A + 'sfx_shoot.ogg', A + 'sfx_shoot.mp3']);
+    this.load.audio('sfx_powerup', [A + 'sfx_powerup.ogg', A + 'sfx_powerup.mp3']);
+    this.load.audio('sfx_explosion', [A + 'sfx_explosion.ogg', A + 'sfx_explosion.mp3']);
+    this.load.audio('sfx_hit', [A + 'sfx_hit.ogg', A + 'sfx_hit.mp3']);
   }
 
   create() {
