@@ -152,7 +152,7 @@ class GameScene extends Phaser.Scene {
     this.scoreText = this.add.text(10, 10, 'SCORE: 0', {
       fontSize: '20px', fill: '#ffffff', fontFamily: 'Arial', fontStyle: 'bold',
     }).setDepth(50);
-    this.livesText = this.add.text(GAME_W - 10, 10, '♥♥♥', {
+    this.livesText = this.add.text(GAME_W - 60, 10, '♥♥♥', {
       fontSize: '20px', fill: '#ff4444', fontFamily: 'Arial',
     }).setOrigin(1, 0).setDepth(50);
     this.weaponText = this.add.text(10, 36, 'WEAPON: Lv.1', {
@@ -162,30 +162,60 @@ class GameScene extends Phaser.Scene {
       fontSize: '14px', fill: '#ffcc00', fontFamily: 'Arial',
     }).setOrigin(0.5, 0).setDepth(50);
 
-    // ポーズ
+    // ポーズボタン（モバイルで押しやすいサイズ）
     this.pauseOverlay = this.add.rectangle(GAME_W / 2, GAME_H / 2, GAME_W, GAME_H, 0x000000, 0.7)
       .setVisible(false).setDepth(100);
     this.pauseTitle = this.add.text(GAME_W / 2, GAME_H / 2 - 60, 'PAUSED', {
       fontSize: '48px', fill: '#ffffff', fontFamily: 'Arial', fontStyle: 'bold',
     }).setOrigin(0.5).setVisible(false).setDepth(101);
     this.pauseInfo = this.add.text(GAME_W / 2, GAME_H / 2, [
-      'ESC / P  : もどる', '', '移動 : 矢印キー / WASD', '射撃 : 自動',
+      'ESC / P  : もどる（PC）',
+      'ポーズボタンをタップ（スマホ）',
+      '',
+      '移動 : 矢印キー / WASD / タッチ',
+      '射撃 : 自動',
     ].join('\n'), {
-      fontSize: '18px', fill: '#aaaaaa', fontFamily: 'Arial', align: 'center', lineSpacing: 6,
+      fontSize: '16px', fill: '#aaaaaa', fontFamily: 'Arial', align: 'center', lineSpacing: 6,
     }).setOrigin(0.5).setVisible(false).setDepth(101);
-    this.pauseBtn = this.add.text(GAME_W / 2, 14, '❚❚', {
-      fontSize: '22px', fill: '#888888', fontFamily: 'Arial',
-    }).setOrigin(0.5, 0).setInteractive().setDepth(50);
-    this.pauseBtn.on('pointerdown', (e) => { e.stopPropagation(); this.togglePause(); });
+
+    // ポーズ解除ボタン（ポーズ中のみ表示）
+    this.resumeBtn = this.add.text(GAME_W / 2, GAME_H / 2 + 100, '▶ つづける', {
+      fontSize: '24px', fill: '#00ccff', fontFamily: 'Arial', fontStyle: 'bold',
+      backgroundColor: '#222244', padding: { x: 20, y: 10 },
+    }).setOrigin(0.5).setInteractive().setVisible(false).setDepth(102);
+    this.resumeBtn.on('pointerdown', (e) => { e.stopPropagation(); this.togglePause(); });
+
+    // ポーズボタン（右上、タップしやすい大きめサイズ）
+    this.pauseBtnBg = this.add.rectangle(GAME_W - 30, 20, 44, 34, 0x000000, 0.4)
+      .setDepth(50).setInteractive();
+    this.pauseBtnText = this.add.text(GAME_W - 30, 20, '❚❚', {
+      fontSize: '20px', fill: '#ffffff', fontFamily: 'Arial',
+    }).setOrigin(0.5).setDepth(51);
+    this.pauseBtnBg.on('pointerdown', (e) => { e.stopPropagation(); this.togglePause(); });
+
     this.escKey.on('down', () => this.togglePause());
     this.pKey.on('down', () => this.togglePause());
 
-    // モバイル
+    // モバイル操作（相対移動方式）
+    this.touchStartX = 0;
+    this.touchStartY = 0;
+    this.playerStartX = 0;
+    this.playerStartY = 0;
+
+    this.input.on('pointerdown', (pointer) => {
+      if (this.gameOver || this.paused) return;
+      this.touchStartX = pointer.x;
+      this.touchStartY = pointer.y;
+      this.playerStartX = this.player.x;
+      this.playerStartY = this.player.y;
+    });
+
     this.input.on('pointermove', (pointer) => {
-      if (!this.gameOver && !this.paused && pointer.isDown) {
-        this.player.x = Phaser.Math.Clamp(pointer.x, 20, GAME_W - 20);
-        this.player.y = Phaser.Math.Clamp(pointer.y, 20, GAME_H - 20);
-      }
+      if (this.gameOver || this.paused || !pointer.isDown) return;
+      const dx = pointer.x - this.touchStartX;
+      const dy = pointer.y - this.touchStartY;
+      this.player.x = Phaser.Math.Clamp(this.playerStartX + dx, 20, GAME_W - 20);
+      this.player.y = Phaser.Math.Clamp(this.playerStartY + dy, 20, GAME_H - 20);
     });
 
     this.showStageStart();
@@ -215,7 +245,8 @@ class GameScene extends Phaser.Scene {
     this.pauseOverlay.setVisible(this.paused);
     this.pauseTitle.setVisible(this.paused);
     this.pauseInfo.setVisible(this.paused);
-    this.pauseBtn.setText(this.paused ? '▶' : '❚❚');
+    this.resumeBtn.setVisible(this.paused);
+    this.pauseBtnText.setText(this.paused ? '▶' : '❚❚');
   }
 
   // ====== 敵 ======
