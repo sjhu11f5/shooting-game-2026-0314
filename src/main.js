@@ -169,8 +169,8 @@ class GameScene extends Phaser.Scene {
       fontSize: '48px', fill: '#ffffff', fontFamily: 'Arial', fontStyle: 'bold',
     }).setOrigin(0.5).setVisible(false).setDepth(101);
     this.pauseInfo = this.add.text(GAME_W / 2, GAME_H / 2, [
-      'ESC / P  : もどる（PC）',
-      'ポーズボタンをタップ（スマホ）',
+      'PC : ESC / P でもどる',
+      'スマホ : ダブルタップ / ボタン',
       '',
       '移動 : 矢印キー / WASD / タッチ',
       '射撃 : 自動',
@@ -185,24 +185,31 @@ class GameScene extends Phaser.Scene {
     }).setOrigin(0.5).setInteractive().setVisible(false).setDepth(102);
     this.resumeBtn.on('pointerdown', (e) => { e.stopPropagation(); this.togglePause(); });
 
-    // ポーズボタン（右上、タップしやすい大きめサイズ）
-    this.pauseBtnBg = this.add.rectangle(GAME_W - 30, 20, 44, 34, 0x000000, 0.4)
-      .setDepth(50).setInteractive();
-    this.pauseBtnText = this.add.text(GAME_W - 30, 20, '❚❚', {
-      fontSize: '20px', fill: '#ffffff', fontFamily: 'Arial',
-    }).setOrigin(0.5).setDepth(51);
-    this.pauseBtnBg.on('pointerdown', (e) => { e.stopPropagation(); this.togglePause(); });
+    // ポーズヒント（画面上部に小さく表示）
+    this.pauseHint = this.add.text(GAME_W / 2, 54, 'ダブルタップで一時停止', {
+      fontSize: '11px', fill: '#666666', fontFamily: 'Arial',
+    }).setOrigin(0.5).setDepth(50);
 
     this.escKey.on('down', () => this.togglePause());
     this.pKey.on('down', () => this.togglePause());
 
-    // モバイル操作（相対移動方式）
+    // モバイル操作（相対移動 + ダブルタップでポーズ）
     this.touchStartX = 0;
     this.touchStartY = 0;
     this.playerStartX = 0;
     this.playerStartY = 0;
+    this.lastTapTime = 0;
 
     this.input.on('pointerdown', (pointer) => {
+      // ダブルタップ判定（300ms以内の2回タップ）
+      const now = Date.now();
+      if (now - this.lastTapTime < 300) {
+        this.togglePause();
+        this.lastTapTime = 0;
+        return;
+      }
+      this.lastTapTime = now;
+
       if (this.gameOver || this.paused) return;
       this.touchStartX = pointer.x;
       this.touchStartY = pointer.y;
@@ -246,7 +253,6 @@ class GameScene extends Phaser.Scene {
     this.pauseTitle.setVisible(this.paused);
     this.pauseInfo.setVisible(this.paused);
     this.resumeBtn.setVisible(this.paused);
-    this.pauseBtnText.setText(this.paused ? '▶' : '❚❚');
   }
 
   // ====== 敵 ======
